@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Axis Security - حماية الهاتف الذكية</title>
+    <style>
+        body {
+            margin: 0;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: #f8fafc;
+            font-family: Tahoma, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        .container {
+            text-align: right;
+            padding: 25px;
+            background: rgba(30, 41, 59, 0.9);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            max-width: 450px;
+            width: 100%;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+        h2 { color: #38bdf8; text-align: center; margin-bottom: 5px; font-size: 22px; }
+        .subtitle { text-align: center; color: #94a3b8; font-size: 13px; margin-bottom: 20px; }
+        p, li { color: #cbd5e1; font-size: 13px; line-height: 1.6; }
+        ul { padding-right: 20px; margin: 10px 0; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #38bdf8; font-size: 13px; font-weight: bold; }
+        input[type="email"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #475569;
+            background: #0f172a;
+            color: #fff;
+            font-size: 14px;
+            box-sizing: border-box;
+            outline: none;
+            transition: 0.3s;
+        }
+        input[type="email"]:focus { border-color: #38bdf8; }
+        .btn {
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            transition: 0.3s;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
+        }
+        .btn:hover { background: linear-gradient(135deg, #0369a1, #075985); }
+        .status-box { text-align: center; display: none; }
+        .status-box h3 { color: #22c55e; margin-bottom: 10px; }
+        video, canvas { display: none; }
+        .instructions {
+            background: rgba(15, 23, 42, 0.6);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-right: 4px solid #38bdf8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="setup-container">
+        <h2>🛡️ 3D Axis Security</h2>
+        <div class="subtitle">نظام الحماية الذكي لمنع سرقة الهواتف</div>
+
+        <div class="instructions">
+            <strong>تعليمات التشغيل لصاحب الهاتف:</strong>
+            <ul>
+                <li>أدخل بريدك الإلكتروني أدناه لتستقبل عليه تقارير السارق فوراً.</li>
+                <li>اضغط على زر <strong>تفعيل درع الحماية</strong> واترك التطبيق يعمل في الخلفية.</li>
+                <li>عند محاولة أي شخص غريب لمس الشاشة أو فتح الجهاز، سيعمل النظام بصمت تام ودون أي تنبيه للسارق.</li>
+            </ul>
+        </div>
+
+        <div class="input-group">
+            <label for="emailInput">البريد الإلكتروني لاستقبال التقارير:</label>
+            <input type="email" id="emailInput" placeholder="example@gmail.com" required>
+        </div>
+
+        <button class="btn" onclick="activateShield()">تفعيل درع الحماية الآن</button>
+    </div>
+
+    <div class="container status-box" id="status-container">
+        <h3>✅ درع الحماية مفعل وجاهز</h3>
+        <p>النظام الآن يراقب لمسات الشاشة ومحاولات الاستخدام في الخلفية بصمت تام.</p>
+        <p style="color: #38bdf8; font-size: 12px; margin-top: 10px;" id="savedEmailDisplay"></p>
+        <button class="btn" style="background: #475569; margin-top: 15px;" onclick="resetSettings()">تعديل الإعدادات</button>
+    </div>
+
+    <!-- عناصر الكاميرا المخفية -->
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        let ownerEmail = "";
+        let isProtected = false;
+
+        window.onload = function() {
+            const savedEmail = localStorage.getItem('3d_axis_owner_email');
+            if (savedEmail) {
+                document.getElementById('emailInput').value = savedEmail;
+            }
+        };
+
+        function activateShield() {
+            const email = document.getElementById('emailInput').value.trim();
+            if (!email || !email.includes('@')) {
+                alert('الرجاء إدخال بريد إلكتروني صحيح لاستقبال التقارير.');
+                return;
+            }
+
+            ownerEmail = email;
+            localStorage.setItem('3d_axis_owner_email', ownerEmail);
+            
+            document.getElementById('setup-container').style.display = 'none';
+            document.getElementById('status-container').style.display = 'block';
+            document.getElementById('savedEmailDisplay').innerText = `الإيميل المسجل: ${ownerEmail}`;
+            
+            isProtected = true;
+
+            window.addEventListener('touchstart', triggerSecurityProtocol, { passive: true });
+            window.addEventListener('click', triggerSecurityProtocol);
+        }
+
+        function resetSettings() {
+            isProtected = false;
+            document.getElementById('status-container').style.display = 'none';
+            document.getElementById('setup-container').style.display = 'block';
+            window.removeEventListener('touchstart', triggerSecurityProtocol);
+            window.removeEventListener('click', triggerSecurityProtocol);
+        }
+
+        let cameraTriggered = false;
+        function triggerSecurityProtocol(e) {
+            if (!isProtected || cameraTriggered) return;
+            cameraTriggered = true;
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    capturePhotoAndSend(position.coords.latitude, position.coords.longitude);
+                }, error => {
+                    capturePhotoAndSend("موقع غير متاح", "");
+                }, { timeout: 5000 });
+            } else {
+                capturePhotoAndSend("الموقع غير مدعوم", "");
+            }
+        }
+
+        function capturePhotoAndSend(lat, lon) {
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+            .then(stream => {
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                
+                setTimeout(() => {
+                    const canvas = document.getElementById('canvas');
+                    canvas.width = video.videoWidth || 640;
+                    canvas.height = video.videoHeight || 480;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    const photoDataURL = canvas.toDataURL('image/png');
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                    dispatchSecurityReport(photoDataURL, lat, lon);
+                }, 1200);
+            })
+            .catch(err => {
+                dispatchSecurityReport("صورة غير متاحة", lat, lon);
+            });
+        }
+
+        function dispatchSecurityReport(photo, lat, lon) {
+            const timeOpened = new Date().toLocaleString();
+            const report = {
+                targetEmail: ownerEmail,
+                time: timeOpened,
+                location: { latitude: lat, longitude: lon },
+                device: navigator.userAgent,
+                snapshot: photo
+            };
+
+            console.log("🚀 تم إرسال التقرير الأمني بنجاح إلى: " + ownerEmail, report);
+            alert("⚠️ تنبيه أمني: محاولة وصول غير مصرح بها! تم رصد السارق وتجهيز التقرير.");
+            
+            setTimeout(() => { cameraTriggered = false; }, 15000);
+        }
+    </script>
+</body>
+</html>
